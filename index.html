@@ -171,14 +171,14 @@
 <div class="setup-area" id="setupArea">
   <div class="setup-grid" id="setupGrid">
     <div class="folder-card">
-      <h2>📁 Instagram export folder <a class="info-icon" href="https://yourusername.github.io/gramlens/README#setting-up-your-folders" target="_blank" title="How to set up your export folder">?</a></h2>
+      <h2>📁 Instagram export folder <a class="info-icon" id="exportInfoLink" target="_blank" title="How to set up your export folder">?</a></h2>
       <p class="card-desc">Point to the folder you extracted from Instagram's "Download your data" ZIP. The app reads the files it needs automatically — you don't need to pick individual files.</p>
       <button id="pickExportBtn">Select export folder</button>
       <div class="folder-status" id="exportStatus">Not connected</div>
       <div class="file-checklist" id="fileChecklist"></div>
     </div>
     <div class="folder-card">
-      <h2>💾 Workspace folder <a class="info-icon" href="https://yourusername.github.io/gramlens/README#setting-up-your-folders" target="_blank" title="How to set up your workspace folder">?</a></h2>
+      <h2>💾 Workspace folder <a class="info-icon" id="workspaceInfoLink" target="_blank" title="How to set up your workspace folder">?</a></h2>
       <p class="card-desc">A dedicated folder where GramLens stores your baseline snapshot, influencer list, and archives. <strong>First time?</strong> Create an empty folder called "GramLens" and select it. <strong>Returning?</strong> Always select the same folder so your history carries over.</p>
       <button id="pickWorkspaceBtn">Select workspace folder</button>
       <div class="folder-status" id="workspaceStatus">Not connected</div>
@@ -251,6 +251,10 @@ const EXPORT_FILES = {
   storyLikes:          'your_instagram_activity/story_interactions/story_likes.json',
   savedPosts:          'your_instagram_activity/saved/saved_posts.json',
 };
+
+const readmeBase = window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'README#setting-up-your-folders';
+document.getElementById('exportInfoLink').href = readmeBase;
+document.getElementById('workspaceInfoLink').href = readmeBase;
 
 const REQUIRED_FILES = ['following', 'followers'];
 const STORAGE_KEY    = 'ig_tracker_snapshot_v1';
