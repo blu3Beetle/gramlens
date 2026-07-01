@@ -252,9 +252,9 @@ const EXPORT_FILES = {
   savedPosts:          'your_instagram_activity/saved/saved_posts.json',
 };
 
-const readmeBase = window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'README#setting-up-your-folders';
-document.getElementById('exportInfoLink').href = readmeBase;
-document.getElementById('workspaceInfoLink').href = readmeBase;
+																																	
+															
+															   
 
 const REQUIRED_FILES = ['following', 'followers'];
 const STORAGE_KEY    = 'ig_tracker_snapshot_v1';
@@ -899,6 +899,10 @@ function renderEngagement() {
 }
 
 // ─── Event wiring ─────────────────────────────────────────────────────────────
+const docsBase = window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'docs.html';
+document.getElementById('exportInfoLink').href = docsBase + '#setting-up-your-folders';
+document.getElementById('workspaceInfoLink').href = docsBase + '#setting-up-your-folders';
+
 document.getElementById('pickExportBtn').addEventListener('click', pickExport);
 
 document.getElementById('compactExpand').addEventListener('click', () => {

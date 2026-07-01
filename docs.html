@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GramLens — Docs</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface1: #f7f7f5; --surface2: #ffffff;
+    --text1: #1a1a1a; --text2: #6b6b68; --text-muted: #999;
+    --border: #e5e5e3; --border-strong: #c7c7c4;
+    --accent-bg: #e6f1fb; --accent-text: #0c447c;
+    --warn-bg: #faeeda; --warn-text: #854f0b;
+    --green: #0F6E56; --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { overflow-y: scroll; scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text1);
+    max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+    line-height: 1.65;
+  }
+  .site-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2.5rem; padding-bottom: 1rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .site-header a.logo { font-size: 28px; font-weight: 700; text-decoration: none; color: var(--text1); letter-spacing: -0.5px; }
+  .site-header a.back {
+    font-size: 13px; color: var(--accent-text); text-decoration: none;
+    padding: 6px 12px; border: 0.5px solid var(--accent-text);
+    border-radius: var(--radius);
+  }
+  .site-header a.back:hover { background: var(--accent-bg); }
+  .toc {
+    background: var(--surface1); border-radius: 12px;
+    padding: 1.25rem 1.5rem; margin-bottom: 2.5rem;
+    border: 0.5px solid var(--border);
+  }
+  .toc h2 { font-size: 12px; font-weight: 600; color: var(--text2); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .toc ol { margin: 0; padding-left: 1.25rem; }
+  .toc li { margin-bottom: 6px; }
+  .toc a { font-size: 14px; color: var(--accent-text); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .doc-section { margin-bottom: 3rem; scroll-margin-top: 1.5rem; }
+  h1.page-title { font-size: 32px; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+  .page-subtitle { font-size: 15px; color: var(--text2); margin-bottom: 2rem; }
+  h2.section-title {
+    font-size: 20px; font-weight: 700; margin: 0 0 1rem;
+    padding-bottom: 0.5rem; border-bottom: 0.5px solid var(--border);
+  }
+  h3 { font-size: 15px; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+  p { font-size: 14px; margin: 0 0 1rem; }
+  .privacy-banner {
+    background: #f0faf5; border: 0.5px solid #a8dcc4;
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 13px; color: var(--green); margin-bottom: 1.5rem;
+  }
+  blockquote {
+    background: var(--accent-bg); border-left: 3px solid var(--accent-text);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 0 0 1rem; padding: 12px 16px;
+  }
+  blockquote p { color: var(--accent-text); margin: 0; font-size: 13px; }
+  ul, ol { font-size: 14px; padding-left: 1.5rem; margin: 0 0 1rem; }
+  li { margin-bottom: 6px; }
+  .steps { counter-reset: step; list-style: none; padding: 0; }
+  .steps li {
+    counter-increment: step; margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 12px; font-size: 14px;
+  }
+  .steps li::before {
+    content: counter(step); flex-shrink: 0;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent-text); color: white;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 1px;
+  }
+  .checklist { list-style: none; padding: 0; }
+  .checklist li { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+  .checklist li::before { content: '✅'; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+  th {
+    background: var(--surface1); text-align: left;
+    padding: 8px 12px; font-weight: 600; font-size: 12px;
+    border-bottom: 1px solid var(--border); color: var(--text2);
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+  td:first-child { white-space: nowrap; font-weight: 500; }
+  tr:last-child td { border-bottom: none; }
+  .table-wrap { border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; }
+  code {
+    font-family: "SF Mono", "Fira Code", monospace; font-size: 12px;
+    background: var(--surface1); padding: 2px 6px; border-radius: 4px;
+    border: 0.5px solid var(--border);
+  }
+  .warn-box {
+    background: var(--warn-bg); border: 0.5px solid #e8c97a;
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 13px; color: var(--warn-text); margin-bottom: 1rem;
+  }
+  .path-list { list-style: none; padding: 0; }
+  .path-list li { padding: 5px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+  .path-list li:last-child { border-bottom: none; }
+  hr { border: none; border-top: 0.5px solid var(--border); margin: 2.5rem 0; }
+</style>
+</head>
+<body>
+
+<div class="site-header">
+  <a class="logo" href="index.html">GramLens</a>
+  <a class="back" href="index.html">← Open app</a>
+</div>
+
+<h1 class="page-title">Documentation</h1>
+<p class="page-subtitle">Everything you need to know about GramLens.</p>
+
+<div class="privacy-banner">
+  🔒 <strong>Everything stays on your device.</strong> No data is uploaded to any server, no analytics are tracked, and nothing leaves your machine. All processing happens locally in your browser.
+</div>
+
+<div class="toc">
+  <h2>Table of contents</h2>
+  <ol>
+    <li><a href="#privacy-guarantee">Privacy guarantee</a></li>
+    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#how-to-use">How to use GramLens</a></li>
+    <li><a href="#export-data">How to export your Instagram data</a></li>
+    <li><a href="#setting-up-your-folders">Setting up your folders</a></li>
+    <li><a href="#connections-tabs">Connections tabs explained</a></li>
+    <li><a href="#engagement-tabs">Engagement tabs explained</a></li>
+    <li><a href="#baseline">How the baseline works</a></li>
+    <li><a href="#influencer-vs-deactivated">Influencer vs Deactivated</a></li>
+    <li><a href="#limitations">Known limitations</a></li>
+  </ol>
+</div>
+
+<div class="doc-section" id="privacy-guarantee">
+  <h2 class="section-title">Privacy guarantee</h2>
+  <p>GramLens is a single HTML file. When you open it in your browser:</p>
+  <ul>
+    <li><strong>No data is uploaded anywhere.</strong> Your Instagram export stays on your device.</li>
+    <li><strong>No analytics or tracking.</strong> There are no scripts calling any external server.</li>
+    <li><strong>No account required.</strong> Nothing is stored outside the two local folders you choose.</li>
+    <li><strong>Open source.</strong> You can read every line of code in <code>index.html</code>.</li>
+  </ul>
+  <p>The only network activity is the initial page load from GitHub Pages (serving the HTML file itself). After that, everything is local.</p>
+</div>
+
+<hr>
+
+<div class="doc-section" id="requirements">
+  <h2 class="section-title">Requirements</h2>
+  <ul>
+    <li><strong>Chrome or Edge</strong> (desktop) — required for the File System Access API, which lets the app read your export folder and write your baseline file without uploading anything.</li>
+    <li>Firefox and Safari do not currently support this API and will not work.</li>
+    <li>No installation, no Node.js, no terminal. Just open the page and go.</li>
+  </ul>
+</div>
+
+<hr>
+
+<div class="doc-section" id="how-to-use">
+  <h2 class="section-title">How to use GramLens</h2>
+  <ol class="steps">
+    <li>Open GramLens in Chrome or Edge</li>
+    <li>Export your Instagram data (see below)</li>
+    <li>Click <strong>Select export folder</strong> and point it to your extracted export folder</li>
+    <li>Click <strong>Select workspace folder</strong> and point it to your GramLens workspace folder</li>
+    <li>Click <strong>Run analysis</strong></li>
+    <li>Browse your connections and engagement tabs</li>
+    <li>When done, click <strong>Save snapshot as new baseline</strong> — this lets GramLens show you diffs next time</li>
+  </ol>
+</div>
+
+<hr>
+
+<div class="doc-section" id="export-data">
+  <h2 class="section-title">How to export your Instagram data</h2>
+  <p>Instagram's data export can take anywhere from a few minutes to a few hours depending on account size.</p>
+
+  <h3>Step by step</h3>
+  <ol class="steps">
+    <li>Open Instagram and go to <strong>Settings</strong></li>
+    <li>Tap <strong>Accounts Centre</strong></li>
+    <li>Tap <strong>Your information and permissions</strong></li>
+    <li>Tap <strong>Download your information</strong></li>
+    <li>Tap <strong>Download or transfer information</strong></li>
+    <li>Select your <strong>Instagram account</strong></li>
+    <li>Select <strong>Some of your information</strong></li>
+    <li>Select only the categories listed below — leave everything else unchecked</li>
+    <li>Set export settings as shown in the table below</li>
+    <li>Tap <strong>Create export → Export to device</strong></li>
+    <li>You'll get two emails from Meta Privacy Team — first confirming the request, second when export is ready to download</li>
+    <li>Download the ZIP from the second email and <strong>extract it</strong> to a folder on your computer — this becomes your export folder</li>
+  </ol>
+
+  <h3>What to select</h3>
+  <p>Under <strong>Your Instagram activity:</strong></p>
+  <ul class="checklist">
+    <li>Comments</li>
+    <li>Likes</li>
+    <li>Saved</li>
+    <li>Story interactions</li>
+  </ul>
+  <p>Under <strong>Connections:</strong></p>
+  <ul class="checklist">
+    <li>Followers and following</li>
+  </ul>
+  <p style="color:var(--text2);font-size:13px;">Leave everything else unchecked. This keeps the export small and fast — GramLens doesn't use any of the other data.</p>
+
+  <h3>Export settings</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Date range</td><td>All time</td></tr>
+        <tr><td>Format</td><td><strong>JSON</strong> — must be JSON, not HTML</td></tr>
+        <tr><td>Media quality</td><td>Low (GramLens doesn't use media files)</td></tr>
+        <tr><td>Notify</td><td>Your email</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="warn-box">⚠️ <strong>Format must be JSON.</strong> If you select HTML, GramLens won't be able to read the files.</div>
+</div>
+
+<hr>
+
+<div class="doc-section" id="setting-up-your-folders">
+  <h2 class="section-title">Setting up your folders</h2>
+  <p>GramLens needs access to two folders on your machine.</p>
+
+  <h3>Export folder</h3>
+  <p>Point this to the folder you extracted from Instagram's ZIP. GramLens navigates it automatically — you don't have to select individual files. The app looks for these files:</p>
+  <ul class="path-list">
+    <li><code>connections/followers_and_following/following.json</code></li>
+    <li><code>connections/followers_and_following/followers_1.json</code></li>
+    <li><code>connections/followers_and_following/recently_unfollowed_profiles.json</code></li>
+    <li><code>connections/followers_and_following/close_friends.json</code></li>
+    <li><code>connections/followers_and_following/restricted_profiles.json</code></li>
+    <li><code>connections/followers_and_following/blocked_profiles.json</code></li>
+    <li><code>connections/followers_and_following/hide_story_from.json</code></li>
+    <li><code>connections/followers_and_following/pending_follow_requests.json</code></li>
+    <li><code>your_instagram_activity/likes/liked_posts.json</code></li>
+    <li><code>your_instagram_activity/likes/liked_comments.json</code></li>
+    <li><code>your_instagram_activity/comments/post_comments_1.json</code></li>
+    <li><code>your_instagram_activity/story_interactions/stories_viewed.json</code></li>
+    <li><code>your_instagram_activity/story_interactions/story_likes.json</code></li>
+    <li><code>your_instagram_activity/saved/saved_posts.json</code></li>
+  </ul>
+
+  <h3>Workspace folder</h3>
+  <p>GramLens uses this folder to store your analysis history. It writes:</p>
+  <ul>
+    <li><code>baseline.json</code> — your saved snapshot, used to compare against next time</li>
+    <li><code>archive/</code> — timestamped snapshots of previous analyses</li>
+  </ul>
+  <p><strong>First time:</strong> Create a new empty folder anywhere on your machine (e.g. <code>Documents/GramLens</code>) and select it.</p>
+  <p><strong>Returning:</strong> Always select the same folder so your history carries over.</p>
+  <blockquote><p>The browser will ask you to grant folder access each time you open GramLens — this is a browser security requirement and is expected.</p></blockquote>
+</div>
+
+<hr>
+
+<div class="doc-section" id="connections-tabs">
+  <h2 class="section-title">Connections tabs explained</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tab</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td>Unfollowers</td><td>Accounts you follow that don't follow you back. Excludes influencers, deactivated accounts, and accounts awaiting approval.</td></tr>
+        <tr><td>You don't follow</td><td>Accounts that follow you but you don't follow back.</td></tr>
+        <tr><td>New friends</td><td>Accounts that became mutual follows since your last saved baseline.</td></tr>
+        <tr><td>Lost friends</td><td>Accounts that were mutual follows before but neither of you follow each other anymore.</td></tr>
+        <tr><td>Friends</td><td>Current mutual follows that existed in your previous baseline too (not new).</td></tr>
+        <tr><td>Close friends</td><td>Your Instagram close friends list.</td></tr>
+        <tr><td>Influencers</td><td>Accounts manually marked as influencers — excluded from Unfollowers. Star (☆/★) to mark/unmark from the Unfollowers tab.</td></tr>
+        <tr><td>Deactivated</td><td>Accounts marked as deactivated — excluded from Unfollowers. ⊘ to mark/unmark. If they reactivate and follow you, they automatically move to New friends.</td></tr>
+        <tr><td>Restricted</td><td>Accounts you've restricted on Instagram.</td></tr>
+        <tr><td>Blocked</td><td>Accounts you've blocked on Instagram.</td></tr>
+        <tr><td>Awaiting approval</td><td>Accounts you sent a follow request to that haven't accepted yet. Excluded from Unfollowers.</td></tr>
+        <tr><td>Hidden story from</td><td>Accounts you've hidden your stories from.</td></tr>
+        <tr><td>You unfollowed</td><td>Accounts you recently unfollowed, according to Instagram's log.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<hr>
+
+<div class="doc-section" id="engagement-tabs">
+  <h2 class="section-title">Engagement tabs explained</h2>
+  <p>These tabs show which accounts you engage with most, ranked by frequency.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Tab</th><th>What it shows</th></tr></thead>
+      <tbody>
+        <tr><td>Most liked (posts)</td><td>Accounts whose posts you like the most.</td></tr>
+        <tr><td>Most liked (comments)</td><td>Accounts whose comments you've liked.</td></tr>
+        <tr><td>Most commented</td><td>Accounts whose posts you comment on most.</td></tr>
+        <tr><td>Most watched stories</td><td>Accounts whose stories you view most frequently.</td></tr>
+        <tr><td>Story likes</td><td>Accounts whose stories you've liked.</td></tr>
+        <tr><td>Most saved from</td><td>Accounts whose posts you save the most.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:13px;color:var(--text2);">Cross-referencing these with your Unfollowers or You don't follow tabs can surface accounts you interact with heavily but don't have a mutual connection with.</p>
+</div>
+
+<hr>
+
+<div class="doc-section" id="baseline">
+  <h2 class="section-title">How the baseline works</h2>
+  <p>A baseline is a saved snapshot of your following and followers at a point in time.</p>
+  <ul>
+    <li><strong>First run:</strong> No baseline exists yet. All mutual follows are shown as Friends since there's nothing to compare against.</li>
+    <li><strong>After saving:</strong> Click <strong>Save snapshot as new baseline</strong> when done reviewing. GramLens writes <code>baseline.json</code> to your workspace folder.</li>
+    <li><strong>Next run:</strong> GramLens compares the new export against the saved baseline and shows New friends, Lost friends, and Unfollowers as diffs.</li>
+  </ul>
+  <p>The more regularly you run GramLens and save a baseline, the more useful the diffs become.</p>
+</div>
+
+<hr>
+
+<div class="doc-section" id="influencer-vs-deactivated">
+  <h2 class="section-title">Influencer vs Deactivated</h2>
+  <p>Both categories remove accounts from your Unfollowers count, but for different reasons:</p>
+  <p><strong>Influencer</strong> — you follow this account knowing they'll never follow back (celebrities, brands, creators). Star (☆/★) to mark from the Unfollowers tab.</p>
+  <p><strong>Deactivated</strong> — this account's page doesn't load, probably temporarily deactivated. ⊘ to mark from the Unfollowers tab. If they come back and follow you, GramLens automatically detects this and moves them to New friends on the next run.</p>
+</div>
+
+<hr>
+
+<div class="doc-section" id="limitations">
+  <h2 class="section-title">Known limitations</h2>
+  <ul>
+    <li><strong>Chrome and Edge only</strong> — the File System Access API is not supported in Firefox or Safari.</li>
+    <li><strong>No profile pictures</strong> — Instagram's export doesn't include avatar images and GramLens can't fetch them without authentication.</li>
+    <li><strong>Username changes</strong> — if someone changes their Instagram handle, GramLens loses track of them since the export only contains usernames, not internal account IDs.</li>
+    <li><strong>followers_1.json only</strong> — if your account has more than ~500 followers, Instagram may split followers into multiple files. GramLens currently only reads <code>followers_1.json</code>.</li>
+    <li><strong>Export delay</strong> — Instagram exports are a point-in-time snapshot and can take hours to generate. The data may be slightly behind real-time.</li>
+  </ul>
+</div>
+
+</body>
+</html>
