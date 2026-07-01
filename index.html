@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GramLens — Instagram Analyser</title>
+<style>
+  :root {
+    --bg: #ffffff; --surface1: #f7f7f5; --surface2: #ffffff;
+    --text1: #1a1a1a; --text2: #6b6b68; --text-muted: #999;
+    --border: #e5e5e3; --border-strong: #c7c7c4;
+    --accent-bg: #e6f1fb; --accent-text: #0c447c;
+    --warn-bg: #faeeda; --warn-text: #854f0b;
+    --green: #0F6E56; --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { overflow-y: scroll; scrollbar-width: none; }
+  html::-webkit-scrollbar { display: none; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg); color: var(--text1);
+    max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem;
+  }
+  h1 { font-size: 32px; font-weight: 700; margin-bottom: 0.25rem; letter-spacing: -0.5px; }
+  .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
+  button {
+    font-size: 13px; padding: 8px 14px; cursor: pointer;
+    background: var(--surface2); border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius); color: var(--text1);
+  }
+  button:hover { background: var(--surface1); }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary { background: var(--accent-text); color: white; border: none; }
+  button.primary:hover { opacity: 0.88; }
+
+  /* Setup area — full width when expanded, compact strip when collapsed */
+  .setup-area { margin-bottom: 1.5rem; }
+  .setup-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem;
+    max-height: 800px; opacity: 1;
+    overflow: hidden;
+    transition: max-height 0.45s ease, opacity 0.35s ease, margin 0.35s ease;
+  }
+  .setup-grid.collapsed {
+    max-height: 0; opacity: 0; margin-bottom: 0; pointer-events: none;
+  }
+  @media (max-width: 600px) { .setup-grid { grid-template-columns: 1fr; } }
+  .folder-card {
+    background: var(--surface1); border-radius: 12px; padding: 1rem 1.2rem;
+    border: 0.5px solid var(--border);
+  }
+  .folder-card h2 { font-size: 14px; font-weight: 600; margin: 0 0 4px; display: flex; align-items: center; gap: 6px; }
+  .info-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--border-strong); color: var(--text2);
+    font-size: 10px; font-weight: 700; text-decoration: none;
+    flex-shrink: 0; transition: background 0.15s, color 0.15s;
+  }
+  .info-icon:hover { background: var(--accent-text); color: white; }
+  .folder-card p.card-desc { font-size: 12px; color: var(--text2); margin: 0 0 10px; line-height: 1.5; }
+  .folder-status { font-size: 12px; margin-top: 8px; color: var(--text-muted); }
+  .folder-status.ok { color: var(--green); font-weight: 500; }
+  .folder-status.err { color: #A32D2D; }
+  .file-checklist { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 1px; }
+  .file-check { font-size: 11px; color: var(--text-muted); padding: 2px 0; }
+  .file-check.found { color: var(--green); }
+  .file-check.missing { color: #A32D2D; }
+
+  /* Analyze bar collapses too */
+  .analyze-bar {
+    display: flex; gap: 10px; align-items: center;
+    max-height: 60px; opacity: 1; overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.25s ease, margin 0.3s ease;
+  }
+  .analyze-bar.collapsed {
+    max-height: 0; opacity: 0; margin: 0; pointer-events: none;
+  }
+
+  /* Compact strip shown after analysis runs */
+  .setup-compact {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    background: var(--surface1); border-radius: var(--radius);
+    padding: 10px 14px; border: 0.5px solid var(--border); margin-bottom: 1rem;
+    max-height: 0; opacity: 0; overflow: hidden; pointer-events: none;
+    transition: max-height 0.4s ease, opacity 0.35s ease;
+  }
+  .setup-compact.visible {
+    max-height: 80px; opacity: 1; pointer-events: auto;
+  }
+  .compact-item { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+  .compact-item strong { color: var(--text1); }
+  .compact-expand { font-size: 12px; color: var(--accent-text); cursor: pointer; margin-left: auto; }
+
+  /* Section tabs — half and half, full width */
+  .section-tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; margin-bottom: 1.25rem;
+    border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  .section-tab {
+    font-size: 14px; font-weight: 500; padding: 12px; cursor: pointer;
+    background: var(--surface1); border: none; color: var(--text2);
+    border-radius: 0; text-align: center; transition: all 0.15s;
+  }
+  .section-tab:first-child { border-right: 0.5px solid var(--border); }
+  .section-tab.active { background: var(--accent-text); color: white; font-weight: 700; }
+
+  .metrics { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.25rem; }
+  .metrics-row { display: grid; gap: 8px; }
+  .metrics-row-static { grid-template-columns: 1fr 1fr; }
+  .metrics-row-nav { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 600px) { .metrics-row-nav { grid-template-columns: 1fr 1fr; } }
+  .metric-card { background: var(--surface1); border-radius: var(--radius); padding: 0.75rem; border: 0.5px solid transparent; }
+  .metric-card.clickable { cursor: pointer; transition: background 0.15s, border-color 0.15s; }
+  .metric-card.clickable:hover { background: var(--accent-bg); border-color: var(--accent-text); }
+  .metric-card.clickable:hover p.label { color: var(--accent-text); }
+  .metric-card p.label { font-size: 11px; color: var(--text2); margin: 0; }
+  .metric-card p.value { font-size: 22px; font-weight: 600; margin: 2px 0 0; }
+  .banner { font-size: 13px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 1rem; }
+  .banner.info { background: var(--accent-bg); color: var(--accent-text); }
+  .banner.warn { background: var(--warn-bg); color: var(--warn-text); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .tab-btn { font-size: 12px; padding: 5px 11px; }
+  .tab-btn.active { background: var(--accent-bg); border-color: var(--accent-text); color: var(--accent-text); font-weight: 700; }
+  .search-bar { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+  input[type=text].search {
+    flex: 1; padding: 8px 12px;
+    border: 0.5px solid var(--border); border-radius: var(--radius); font-size: 14px;
+  }
+  .list-wrap { max-height: 480px; overflow-y: auto; border: 0.5px solid var(--border); border-radius: var(--radius); }
+  .user-row {
+    display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+    border-bottom: 0.5px solid var(--border); user-select: none; position: relative;
+  }
+  .user-row.selected { background: var(--accent-bg); }
+  .user-row:last-child { border-bottom: none; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500; flex-shrink: 0; color: white;
+  }
+  .user-row a { font-size: 14px; color: var(--text1); text-decoration: none; flex: 1; }
+  .user-row a:hover { text-decoration: underline; }
+  .star-btn, .deactivate-btn {
+    font-size: 15px; background: none; border: none; cursor: pointer;
+    color: var(--text-muted); padding: 4px; flex-shrink: 0;
+  }
+  .star-btn.active { color: #BA7517; }
+  .deactivate-btn.active { color: #A32D2D; }
+  .empty-msg { font-size: 13px; color: var(--text-muted); padding: 1rem 12px; }
+  .save-section { margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .save-note { font-size: 12px; color: var(--text-muted); text-align: center; }
+  .reset-link { font-size: 12px; color: var(--text-muted); text-align: center; cursor: pointer; }
+  .hidden { display: none !important; }
+  .eng-list { max-height: 480px; overflow-y: auto; border: 0.5px solid var(--border); border-radius: var(--radius); }
+  .eng-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 0.5px solid var(--border); }
+  .eng-row:last-child { border-bottom: none; }
+  .eng-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 6px; overflow: hidden; }
+  .eng-bar { height: 100%; background: var(--accent-text); border-radius: 4px; }
+  .eng-count { font-size: 12px; color: var(--text2); min-width: 36px; text-align: right; }
+</style>
+</head>
+<body>
+
+<h1>GramLens</h1>
+<p class="subtitle">Instagram analyser — connections, engagement, and follower insights from your data export.</p>
+<div style="background:#f0faf5;border:0.5px solid #a8dcc4;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#0F6E56;margin-bottom:1.25rem;">
+  🔒 <strong>Everything stays on your device.</strong> No data is uploaded to any server, no analytics are tracked, and nothing leaves your machine. All processing happens locally in your browser.
+</div>
+
+<div class="setup-area" id="setupArea">
+  <div class="setup-grid" id="setupGrid">
+    <div class="folder-card">
+      <h2>📁 Instagram export folder <a class="info-icon" href="https://yourusername.github.io/gramlens/README#setting-up-your-folders" target="_blank" title="How to set up your export folder">?</a></h2>
+      <p class="card-desc">Point to the folder you extracted from Instagram's "Download your data" ZIP. The app reads the files it needs automatically — you don't need to pick individual files.</p>
+      <button id="pickExportBtn">Select export folder</button>
+      <div class="folder-status" id="exportStatus">Not connected</div>
+      <div class="file-checklist" id="fileChecklist"></div>
+    </div>
+    <div class="folder-card">
+      <h2>💾 Workspace folder <a class="info-icon" href="https://yourusername.github.io/gramlens/README#setting-up-your-folders" target="_blank" title="How to set up your workspace folder">?</a></h2>
+      <p class="card-desc">A dedicated folder where GramLens stores your baseline snapshot, influencer list, and archives. <strong>First time?</strong> Create an empty folder called "GramLens" and select it. <strong>Returning?</strong> Always select the same folder so your history carries over.</p>
+      <button id="pickWorkspaceBtn">Select workspace folder</button>
+      <div class="folder-status" id="workspaceStatus">Not connected</div>
+    </div>
+  </div>
+  <div class="analyze-bar" id="analyzeBar">
+    <button id="analyzeBtn" class="primary" disabled>Run analysis</button>
+    <span id="analyzeHint" style="font-size:12px;color:var(--text-muted)">Connect export folder first</span>
+  </div>
+</div>
+
+<!-- Compact summary strip shown after analysis -->
+<div class="setup-compact" id="setupCompact">
+  <div class="compact-item">📁 Export: <strong id="compactExport">—</strong></div>
+  <div class="compact-item">💾 Workspace: <strong id="compactWorkspace">—</strong></div>
+  <div class="compact-item" id="compactBaselineStatus"></div>
+  <span class="compact-expand" id="compactExpand">Change folders ↑</span>
+  <button id="rerunBtn" style="font-size:12px;padding:5px 10px;">Re-run analysis</button>
+</div>
+
+<div id="resultsSection" class="hidden">
+  <div id="banner"></div>
+  <div class="metrics" id="metrics"></div>
+
+  <div class="section-tabs">
+    <button class="section-tab active" data-section="connections">Connections</button>
+    <button class="section-tab" data-section="engagement">Engagement</button>
+  </div>
+
+  <div id="connectionsSection">
+    <div class="tabs" id="tabs"></div>
+    <div class="search-bar">
+      <input type="text" class="search" id="search" placeholder="Search username" />
+      <button id="markSelectedBtn" class="primary hidden">Mark selected as influencer</button>
+    </div>
+    <div class="list-wrap" id="list"></div>
+  </div>
+
+  <div id="engagementSection" class="hidden">
+    <div class="tabs" id="engTabs"></div>
+    <div class="search-bar">
+      <input type="text" class="search" id="engSearch" placeholder="Search username" />
+    </div>
+    <div class="eng-list" id="engList"></div>
+  </div>
+
+  <div class="save-section">
+    <button id="saveBtn" class="primary" disabled>Save snapshot as new baseline and archive export data</button>
+    <p class="save-note">Saves baseline.json to your workspace folder. Required to track changes over time.</p>
+    <span class="reset-link" id="resetLink">Clear saved baseline and influencer list</span>
+  </div>
+</div>
+
+<script>
+// ─── Known file paths inside the export folder ───────────────────────────────
+const EXPORT_FILES = {
+  following:           'connections/followers_and_following/following.json',
+  followers:           'connections/followers_and_following/followers_1.json',
+  recentlyUnfollowed:  'connections/followers_and_following/recently_unfollowed_profiles.json',
+  recentFollowReqs:    'connections/followers_and_following/recent_follow_requests.json',
+  pendingFollowReqs:   'connections/followers_and_following/pending_follow_requests.json',
+  closeFriends:        'connections/followers_and_following/close_friends.json',
+  restricted:          'connections/followers_and_following/restricted_profiles.json',
+  hideStoryFrom:       'connections/followers_and_following/hide_story_from.json',
+  blocked:             'connections/followers_and_following/blocked_profiles.json',
+  likedPosts:          'your_instagram_activity/likes/liked_posts.json',
+  likedComments:       'your_instagram_activity/likes/liked_comments.json',
+  postComments:        'your_instagram_activity/comments/post_comments_1.json',
+  storiesViewed:       'your_instagram_activity/story_interactions/stories_viewed.json',
+  storyLikes:          'your_instagram_activity/story_interactions/story_likes.json',
+  savedPosts:          'your_instagram_activity/saved/saved_posts.json',
+};
+
+const REQUIRED_FILES = ['following', 'followers'];
+const STORAGE_KEY    = 'ig_tracker_snapshot_v1';
+const INFLUENCER_KEY = 'ig_tracker_influencers_v1';
+const DEACTIVATED_KEY = 'ig_tracker_deactivated_v1';
+
+// ─── State ────────────────────────────────────────────────────────────────────
+let exportHandle    = null;
+let workspaceHandle = null;
+let exportData      = {};   // raw parsed JSON keyed by EXPORT_FILES keys
+let prevSnapshot    = null;
+let influencers     = new Set();
+let deactivated     = new Set();
+let analysis        = null;
+
+let activeSection   = 'connections';
+let activeTab       = 'unfollowers';
+let activeEngTab    = 'likedPosts';
+let searchTerm      = '';
+let engSearchTerm   = '';
+let selectedUsers   = new Set();
+let currentFilteredUsers = [];
+let isDragging      = false;
+let dragMode        = null;
+
+// ─── Connection tabs ──────────────────────────────────────────────────────────
+const CONN_TABS = [
+  { key: 'unfollowers',   label: 'Unfollowers' },
+  { key: 'dontFollow',    label: "You don't follow" },
+  { key: 'newFriends',    label: 'New friends' },
+  { key: 'lostFriends',   label: 'Lost friends' },
+  { key: 'friends',       label: 'Friends' },
+  { key: 'closeFriends',  label: 'Close friends' },
+  { key: 'influencers',   label: 'Influencers' },
+  { key: 'deactivatedTab',label: 'Deactivated' },
+  { key: 'restricted',    label: 'Restricted' },
+  { key: 'blocked',       label: 'Blocked' },
+  { key: 'awaitingApproval', label: 'Awaiting approval' },
+  { key: 'hiddenStory',   label: 'Hidden story from' },
+  { key: 'recentUnfollowed', label: 'You unfollowed' },
+];
+
+// ─── Engagement tabs ──────────────────────────────────────────────────────────
+const ENG_TABS = [
+  { key: 'likedPosts',    label: 'Most liked (posts)' },
+  { key: 'likedComments', label: 'Most liked (comments)' },
+  { key: 'postComments',  label: 'Most commented' },
+  { key: 'storiesViewed', label: 'Most watched stories' },
+  { key: 'storyLikes',    label: 'Story likes' },
+  { key: 'savedPosts',    label: 'Most saved from' },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function avatarColor(name) {
+  const colors = ['#7F77DD','#1D9E75','#D85A30','#D4537E','#0c447c','#854f0b'];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return colors[Math.abs(h) % colors.length];
+}
+
+function isDeleted(u) { return u.startsWith('__deleted__'); }
+
+async function readFileFromExport(key) {
+  if (!exportHandle) return null;
+  const parts = EXPORT_FILES[key].split('/');
+  try {
+    let dir = exportHandle;
+    for (let i = 0; i < parts.length - 1; i++) {
+      dir = await dir.getDirectoryHandle(parts[i]);
+    }
+    const fh = await dir.getFileHandle(parts[parts.length - 1]);
+    const file = await fh.getFile();
+    return JSON.parse(await file.text());
+  } catch (e) {
+    return null;
+  }
+}
+
+// ─── Parsers ──────────────────────────────────────────────────────────────────
+function parseFollowing(d) {
+  const map = {};
+  for (const item of (d.relationships_following || d)) {
+    const u = item.title;
+    const ts = item.string_list_data?.[0]?.timestamp ?? null;
+    if (u && !isDeleted(u)) map[u] = ts;
+  }
+  return map;
+}
+
+function parseFollowers(d) {
+  const map = {};
+  const list = Array.isArray(d) ? d : (d.relationships_followers || []);
+  for (const item of list) {
+    for (const e of (item.string_list_data || [])) {
+      if (e.value && !isDeleted(e.value)) map[e.value] = e.timestamp;
+    }
+  }
+  return map;
+}
+
+function parseSimpleList(d, key) {
+  const arr = [];
+  const list = d?.[key] || d || [];
+  for (const item of (Array.isArray(list) ? list : [])) {
+    const u = item.title || item.string_list_data?.[0]?.value;
+    if (u && !isDeleted(u)) arr.push(u);
+  }
+  return arr;
+}
+
+function parseEngagement(d) {
+  // Returns { username -> count }
+  const counts = {};
+  const items = d?.relationships_permanent_follow_requests
+    || d?.media_likes
+    || d?.comment_likes
+    || d?.comments_media_comments
+    || d?.story_activities_story_likes
+    || d?.story_activities_story_views
+    || d?.saved_saved_media
+    || [];
+  for (const item of items) {
+    const entries = item.string_list_data || item.string_map_data ? [item] : [];
+    const title = item.title;
+    if (title && !isDeleted(title)) {
+      counts[title] = (counts[title] || 0) + 1;
+    }
+  }
+  return counts;
+}
+
+// ─── Folder picking ───────────────────────────────────────────────────────────
+async function pickExport() {
+  try {
+    exportHandle = await window.showDirectoryPicker({ mode: 'read' });
+    document.getElementById('exportStatus').innerHTML = `<strong>${exportHandle.name}</strong> <span style="color:var(--text-muted)">(browsers don't expose full path)</span>`;
+    document.getElementById('exportStatus').className = 'folder-status ok';
+    await checkExportFiles();
+    updateAnalyzeBtn();
+  } catch (e) { console.log('export folder pick cancelled', e); }
+}
+
+async function checkExportFiles() {
+  const cl = document.getElementById('fileChecklist');
+  cl.innerHTML = '';
+  for (const [key, path] of Object.entries(EXPORT_FILES)) {
+    const parts = path.split('/');
+    let found = false;
+    try {
+      let dir = exportHandle;
+      for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i]);
+      await dir.getFileHandle(parts[parts.length - 1]);
+      found = true;
+    } catch (e) {}
+    const div = document.createElement('div');
+    div.className = 'file-check ' + (found ? 'found' : 'missing');
+    div.textContent = (found ? '✓ ' : '✗ ') + parts[parts.length - 1];
+    cl.appendChild(div);
+  }
+}
+
+async function pickWorkspace() {
+  try {
+    workspaceHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    document.getElementById('workspaceStatus').innerHTML = `<strong>${workspaceHandle.name}</strong> <span style="color:var(--text-muted)">(browsers don't expose full path)</span>`;
+    document.getElementById('workspaceStatus').className = 'folder-status ok';
+    await loadBaseline();
+    updateAnalyzeBtn();
+  } catch (e) { console.log('workspace folder pick cancelled', e); }
+}
+
+function updateAnalyzeBtn() {
+  const btn = document.getElementById('analyzeBtn');
+  const hint = document.getElementById('analyzeHint');
+  if (!exportHandle) {
+    btn.disabled = true;
+    hint.textContent = 'Connect export folder first';
+  } else {
+    btn.disabled = false;
+    hint.textContent = workspaceHandle ? 'Workspace connected — baseline will be loaded and saved' : 'No workspace — analysis will run but nothing will be saved';
+  }
+}
+
+// ─── Baseline ─────────────────────────────────────────────────────────────────
+async function loadBaseline() {
+  if (!workspaceHandle) return;
+  try {
+    const fh = await workspaceHandle.getFileHandle('baseline.json');
+    const data = JSON.parse(await (await fh.getFile()).text());
+    prevSnapshot = data.snapshot || null;
+    influencers  = new Set(data.influencers || []);
+    deactivated  = new Set(data.deactivated || []);
+    document.getElementById('workspaceStatus').textContent = `Connected: ${workspaceHandle.name} (baseline loaded)`;
+  } catch (e) { prevSnapshot = null; }
+}
+
+async function writeBaseline(snapshot) {
+  if (!workspaceHandle) return false;
+  try {
+    const fh = await workspaceHandle.getFileHandle('baseline.json', { create: true });
+    const wr = await fh.createWritable();
+    await wr.write(JSON.stringify({ snapshot, influencers: [...influencers], deactivated: [...deactivated], savedAt: new Date().toISOString() }, null, 2));
+    await wr.close();
+    return true;
+  } catch (e) { alert('Could not write baseline.json: ' + e.message); return false; }
+}
+
+async function syncTags() {
+  if (!workspaceHandle) return;
+  try {
+    const fh = await workspaceHandle.getFileHandle('baseline.json', { create: true });
+    let existing = {};
+    try { existing = JSON.parse(await (await (await fh.getFile()).text())); } catch {}
+    existing.influencers = [...influencers];
+    existing.deactivated = [...deactivated];
+    existing.snapshot = existing.snapshot || prevSnapshot || exportData.snapshot;
+    const wr = await fh.createWritable();
+    await wr.write(JSON.stringify(existing, null, 2));
+    await wr.close();
+  } catch (e) { console.log('sync tags failed', e); }
+}
+
+async function archiveExport(snapshot) {
+  if (!workspaceHandle) return;
+  try {
+    const archDir = await workspaceHandle.getDirectoryHandle('archive', { create: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+    const fh = await archDir.getFileHandle(`${ts}_snapshot.json`, { create: true });
+    const wr = await fh.createWritable();
+    await wr.write(JSON.stringify(snapshot, null, 2));
+    await wr.close();
+  } catch (e) { console.log('archive failed', e); }
+}
+
+// ─── Analysis ─────────────────────────────────────────────────────────────────
+async function runAnalysis() {
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('analyzeHint').textContent = 'Reading export files…';
+
+  // Read all export files
+  const raw = {};
+  for (const key of Object.keys(EXPORT_FILES)) {
+    raw[key] = await readFileFromExport(key);
+  }
+
+  // Parse connection data
+  const following   = raw.following  ? parseFollowing(raw.following)  : {};
+  const followers   = raw.followers  ? parseFollowers(raw.followers)  : {};
+
+  exportData.snapshot = { following, followers };
+
+  // Extract username from label_values array (used by connections files)
+  // Schema: array of {label, value} objects — find the one with label "Username"
+  function usernameFromLabelValues(labelValues) {
+    if (!Array.isArray(labelValues)) return null;
+    for (const lv of labelValues) {
+      if (lv?.label === 'Username' && lv.value) return lv.value;
+    }
+    return null;
+  }
+
+  // Extract username from nested Owner dict (used by liked_posts, saved_posts, stories_viewed, story_likes)
+  // Schema: label_values contains {title: "Owner", dict: [{dict: [{label:"Username", value:"u"}]}]}
+  function usernameFromOwner(labelValues) {
+    if (!Array.isArray(labelValues)) return null;
+    for (const lv of labelValues) {
+      if (lv?.title === 'Owner' && Array.isArray(lv.dict)) {
+        for (const d1 of lv.dict) {
+          if (Array.isArray(d1.dict)) {
+            for (const d2 of d1.dict) {
+              if (d2?.label === 'Username' && d2.value) return d2.value;
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // Parse connection list files — each item has label_values with Username
+  // Handles both array format and single-object format (close_friends, restricted)
+  function parseConnList(d) {
+    if (!d) return [];
+    const items = Array.isArray(d) ? d : [d];
+    return items.map(item => usernameFromLabelValues(item.label_values)).filter(u => u && !isDeleted(u));
+  }
+
+  exportData.closeFriends     = parseConnList(raw.closeFriends);
+  exportData.restricted       = parseConnList(raw.restricted);
+  exportData.blocked          = parseConnList(raw.blocked);
+  exportData.hideStoryFrom    = parseConnList(raw.hideStoryFrom);
+  exportData.recentUnfollowed = parseConnList(raw.recentlyUnfollowed);
+  exportData.awaitingApproval  = parseConnList(raw.pendingFollowReqs);
+
+  // Parse engagement files into {username -> count}
+
+  // liked_posts / saved_posts / stories_viewed: array of items, username in Owner dict
+  function parseOwnerCounts(d) {
+    const counts = {};
+    if (!d || !Array.isArray(d)) return counts;
+    for (const item of d) {
+      const u = usernameFromOwner(item.label_values);
+      if (u && !isDeleted(u)) counts[u] = (counts[u] || 0) + 1;
+    }
+    return counts;
+  }
+
+  // story_likes: same Owner dict structure
+  // liked_comments: {likes_comment_likes: [{title: username, ...}]}
+  function parseTitleCounts(d, key) {
+    const counts = {};
+    if (!d) return counts;
+    const items = d[key] || (Array.isArray(d) ? d : []);
+    for (const item of items) {
+      const u = item.title;
+      if (u && !isDeleted(u)) counts[u] = (counts[u] || 0) + 1;
+    }
+    return counts;
+  }
+
+  // post_comments: [{string_map_data: {"Media Owner": {value: username}}}]
+  function parseCommentCounts(d) {
+    const counts = {};
+    if (!d || !Array.isArray(d)) return counts;
+    for (const item of d) {
+      const u = item.string_map_data?.['Media Owner']?.value;
+      if (u && !isDeleted(u)) counts[u] = (counts[u] || 0) + 1;
+    }
+    return counts;
+  }
+
+  exportData.likedPostsCounts    = parseOwnerCounts(raw.likedPosts);
+  exportData.likedCommentsCounts = parseTitleCounts(raw.likedComments, 'likes_comment_likes');
+  exportData.postCommentsCounts  = parseCommentCounts(raw.postComments);
+  exportData.storiesViewedCounts = parseOwnerCounts(raw.storiesViewed);
+  exportData.storyLikesCounts    = parseOwnerCounts(raw.storyLikes);
+  exportData.savedPostsCounts    = parseOwnerCounts(raw.savedPosts);
+
+  // Compute connection analysis
+  const curFollowing = new Set(Object.keys(following));
+  const curFollowers = new Set(Object.keys(followers));
+  const mutualNow    = [...curFollowing].filter(u => curFollowers.has(u));
+  const unfollowers  = [...curFollowing].filter(u => !curFollowers.has(u));
+  const dontFollow   = [...curFollowers].filter(u => !curFollowing.has(u));
+
+  let newFriends = [], lostFriends = [], friends = [], reactivated = [];
+
+  if (prevSnapshot) {
+    const pF  = new Set(Object.keys(prevSnapshot.following || {}).filter(u => !isDeleted(u)));
+    const pFr = new Set(Object.keys(prevSnapshot.followers || {}).filter(u => !isDeleted(u)));
+    const mutualPrev = new Set([...pF].filter(u => pFr.has(u)));
+    newFriends  = mutualNow.filter(u => !mutualPrev.has(u));
+    friends     = mutualNow.filter(u => mutualPrev.has(u));
+    lostFriends = [...mutualPrev].filter(u => !curFollowing.has(u) && !curFollowers.has(u));
+  } else {
+    friends = mutualNow;
+  }
+
+  // Reactivation detection
+  reactivated = [...deactivated].filter(u => mutualNow.includes(u));
+  reactivated.forEach(u => {
+    deactivated.delete(u);
+    if (!newFriends.includes(u)) newFriends.push(u);
+  });
+
+  const awaitingApprovalSet = new Set(exportData.awaitingApproval || []);
+  analysis = {
+    unfollowers:  unfollowers.filter(u => !influencers.has(u) && !deactivated.has(u) && !awaitingApprovalSet.has(u)),
+    dontFollow, newFriends, lostFriends, friends,
+    closeFriends:   exportData.closeFriends  || [],
+    restricted:     exportData.restricted    || [],
+    blocked:        exportData.blocked       || [],
+    hiddenStory:    exportData.hideStoryFrom || [],
+    recentUnfollowed: exportData.recentUnfollowed || [],
+    awaitingApproval: exportData.awaitingApproval || [],
+    hasPrev: !!prevSnapshot,
+    reactivated,
+    following, followers,
+  };
+
+  document.getElementById('resultsSection').classList.remove('hidden');
+  document.getElementById('saveBtn').disabled = !workspaceHandle;
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('analyzeHint').textContent = workspaceHandle ? 'Done — save snapshot when ready' : 'Done';
+
+  // Animate collapse: fold up setup grid and analyze bar, reveal compact strip
+  document.getElementById('setupGrid').classList.add('collapsed');
+  document.getElementById('analyzeBar').classList.add('collapsed');
+  const compact = document.getElementById('setupCompact');
+  compact.classList.add('visible');
+  document.getElementById('compactExport').textContent = exportHandle ? exportHandle.name : 'None';
+  document.getElementById('compactWorkspace').textContent = workspaceHandle ? workspaceHandle.name : 'Not connected';
+  document.getElementById('compactBaselineStatus').textContent = prevSnapshot ? '✓ Baseline loaded' : 'No baseline yet';
+  document.getElementById('compactBaselineStatus').style.color = prevSnapshot ? 'var(--green)' : 'var(--text-muted)';
+
+  setTimeout(() => {
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 480);
+
+  if (reactivated.length > 0) syncTags();
+  render();
+}
+
+// ─── Rendering ────────────────────────────────────────────────────────────────
+function render() {
+  if (!analysis) return;
+  renderBanner();
+  renderMetrics();
+  if (activeSection === 'connections') renderConnections();
+  else renderEngagement();
+}
+
+function renderBanner() {
+  const el = document.getElementById('banner');
+  const { reactivated, hasPrev } = analysis;
+  if (reactivated?.length > 0) {
+    el.innerHTML = `<div class="banner info">${reactivated.length} previously deactivated account${reactivated.length > 1 ? 's are' : ' is'} active again and moved to New friends: ${reactivated.join(', ')}.</div>`;
+  } else if (!hasPrev) {
+    el.innerHTML = `<div class="banner info">No previous baseline found. This is your starting point — diffs will appear next time you run analysis after saving.</div>`;
+  } else if (!workspaceHandle) {
+    el.innerHTML = `<div class="banner warn">No workspace folder connected — results won't be saved. Connect one above.</div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function renderMetrics() {
+  const { following, followers, friends, unfollowers, newFriends, lostFriends } = analysis;
+  document.getElementById('metrics').innerHTML = `
+    <div class="metrics-row metrics-row-static">
+      <div class="metric-card">
+        <p class="label">Following</p>
+        <p class="value">${Object.keys(following).length.toLocaleString()}</p>
+      </div>
+      <div class="metric-card">
+        <p class="label">Followers</p>
+        <p class="value">${Object.keys(followers).length.toLocaleString()}</p>
+      </div>
+    </div>
+    <div class="metrics-row metrics-row-nav">
+      <div class="metric-card clickable" data-nav-tab="friends">
+        <p class="label">Friends</p>
+        <p class="value">${friends.length.toLocaleString()}</p>
+      </div>
+      <div class="metric-card clickable" data-nav-tab="unfollowers">
+        <p class="label">Unfollowers</p>
+        <p class="value">${unfollowers.length.toLocaleString()}</p>
+      </div>
+      <div class="metric-card clickable" data-nav-tab="newFriends">
+        <p class="label">New friends</p>
+        <p class="value">${newFriends.length.toLocaleString()}</p>
+      </div>
+      <div class="metric-card clickable" data-nav-tab="lostFriends">
+        <p class="label">Lost friends</p>
+        <p class="value">${lostFriends.length.toLocaleString()}</p>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.metric-card.clickable').forEach(card => {
+    card.addEventListener('click', () => {
+      const tab = card.dataset.navTab;
+      // Switch to connections section if not already
+      activeSection = 'connections';
+      document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+      document.querySelector('.section-tab[data-section="connections"]').classList.add('active');
+      document.getElementById('connectionsSection').classList.remove('hidden');
+      document.getElementById('engagementSection').classList.add('hidden');
+      // Switch to the right sub-tab
+      activeTab = tab;
+      searchTerm = '';
+      selectedUsers.clear();
+      renderConnections();
+      // Scroll to the list
+      document.getElementById('connectionsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+}
+
+function getConnLists() {
+  return {
+    unfollowers:     analysis.unfollowers,
+    dontFollow:      analysis.dontFollow,
+    newFriends:      analysis.newFriends,
+    lostFriends:     analysis.lostFriends,
+    friends:         analysis.friends,
+    closeFriends:    analysis.closeFriends,
+    influencers:     [...influencers],
+    deactivatedTab:  [...deactivated],
+    restricted:      analysis.restricted,
+    blocked:         analysis.blocked,
+    awaitingApproval: analysis.awaitingApproval,
+    hiddenStory:     analysis.hiddenStory,
+    recentUnfollowed: analysis.recentUnfollowed,
+  };
+}
+
+function renderConnections() {
+  const lists = getConnLists();
+
+  document.getElementById('tabs').innerHTML = CONN_TABS.map(t =>
+    `<button class="tab-btn ${activeTab === t.key ? 'active' : ''}" data-tab="${t.key}">${t.label} (${(lists[t.key]||[]).length})</button>`
+  ).join('');
+
+  const filtered = (lists[activeTab] || []).filter(u => u.toLowerCase().includes(searchTerm.toLowerCase()));
+  currentFilteredUsers = filtered;
+
+  const markBtn = document.getElementById('markSelectedBtn');
+  const visSelected = [...selectedUsers].filter(u => filtered.includes(u)).length;
+  if (activeTab === 'unfollowers' && visSelected > 0) {
+    markBtn.classList.remove('hidden');
+    markBtn.textContent = `Mark ${visSelected} selected as influencer`;
+  } else {
+    markBtn.classList.add('hidden');
+  }
+
+  const allowSelect  = activeTab === 'unfollowers';
+  const showStar     = activeTab === 'unfollowers' || activeTab === 'influencers';
+  const showDeact    = activeTab === 'unfollowers' || activeTab === 'deactivatedTab';
+  const listEl       = document.getElementById('list');
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<p class="empty-msg">No accounts here.</p>`;
+  } else {
+    listEl.innerHTML = filtered.map(u => {
+      const isInf    = influencers.has(u);
+      const isDeact  = deactivated.has(u);
+      const isSel    = allowSelect && selectedUsers.has(u);
+      return `<div class="user-row ${isSel ? 'selected' : ''}" data-user-row="${u}">
+        <div class="avatar" style="background:${avatarColor(u)}">${u[0].toUpperCase()}</div>
+        <a href="https://instagram.com/${u}" target="_blank">${u}</a>
+        ${showDeact ? `<button class="deactivate-btn ${isDeact ? 'active' : ''}" data-user="${u}" title="${isDeact ? 'Unmark deactivated' : 'Mark as deactivated'}">${isDeact ? '🚫' : '⊘'}</button>` : ''}
+        ${showStar  ? `<button class="star-btn ${isInf ? 'active' : ''}" data-user="${u}">${isInf ? '★' : '☆'}</button>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // Wire tab buttons
+  document.querySelectorAll('#tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeTab = btn.dataset.tab;
+      searchTerm = '';
+      selectedUsers.clear();
+      document.getElementById('search').value = '';
+      renderConnections();
+    });
+  });
+
+  // Wire drag-select
+  if (allowSelect) {
+    document.querySelectorAll('.user-row').forEach(row => {
+      const u = row.dataset.userRow;
+      row.addEventListener('mousedown', e => {
+        if (e.target.closest('.star-btn') || e.target.closest('.deactivate-btn') || e.target.closest('a')) return;
+        e.preventDefault();
+        isDragging = true;
+        dragMode   = selectedUsers.has(u) ? 'deselect' : 'select';
+        toggleSel(u, dragMode);
+      });
+      row.addEventListener('mouseenter', () => { if (isDragging) toggleSel(u, dragMode); });
+    });
+  }
+
+  // Wire star and deactivate
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const u = btn.dataset.user;
+      if (influencers.has(u)) influencers.delete(u); else influencers.add(u);
+      renderConnections();
+      await syncTags();
+    });
+  });
+  document.querySelectorAll('.deactivate-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const u = btn.dataset.user;
+      if (deactivated.has(u)) deactivated.delete(u); else deactivated.add(u);
+      renderConnections();
+      await syncTags();
+    });
+  });
+}
+
+function toggleSel(u, mode) {
+  if (mode === 'select') selectedUsers.add(u); else selectedUsers.delete(u);
+  const row = document.querySelector(`.user-row[data-user-row="${CSS.escape(u)}"]`);
+  if (row) row.classList.toggle('selected', selectedUsers.has(u));
+  const visSelected = [...selectedUsers].filter(x => currentFilteredUsers.includes(x)).length;
+  const markBtn = document.getElementById('markSelectedBtn');
+  if (activeTab === 'unfollowers' && visSelected > 0) {
+    markBtn.classList.remove('hidden');
+    markBtn.textContent = `Mark ${visSelected} selected as influencer`;
+  } else {
+    markBtn.classList.add('hidden');
+  }
+}
+
+function renderEngagement() {
+  // Build sorted lists from counts
+  function sortedList(counts) {
+    return Object.entries(counts || {})
+      .sort((a, b) => b[1] - a[1]);
+  }
+
+  const engData = {
+    likedPosts:    sortedList(exportData.likedPostsCounts),
+    likedComments: sortedList(exportData.likedCommentsCounts),
+    postComments:  sortedList(exportData.postCommentsCounts),
+    storiesViewed: sortedList(exportData.storiesViewedCounts),
+    storyLikes:    sortedList(exportData.storyLikesCounts),
+    savedPosts:    sortedList(exportData.savedPostsCounts),
+  };
+
+  document.getElementById('engTabs').innerHTML = ENG_TABS.map(t =>
+    `<button class="tab-btn ${activeEngTab === t.key ? 'active' : ''}" data-engtab="${t.key}">${t.label} (${(engData[t.key]||[]).length})</button>`
+  ).join('');
+
+  const filtered = (engData[activeEngTab] || []).filter(([u]) => u.toLowerCase().includes(engSearchTerm.toLowerCase()));
+  const maxCount = filtered[0]?.[1] || 1;
+
+  const el = document.getElementById('engList');
+  if (filtered.length === 0) {
+    el.innerHTML = `<p class="empty-msg">No data found for this category. Make sure this file exists in your export.</p>`;
+  } else {
+    el.innerHTML = filtered.map(([u, count]) => `
+      <div class="eng-row">
+        <div class="avatar" style="background:${avatarColor(u)}">${u[0].toUpperCase()}</div>
+        <a href="https://instagram.com/${u}" target="_blank" style="font-size:14px;color:var(--text1);text-decoration:none;flex:1">${u}</a>
+        <div class="eng-bar-wrap"><div class="eng-bar" style="width:${Math.round(count/maxCount*100)}%"></div></div>
+        <span class="eng-count">${count}</span>
+      </div>
+    `).join('');
+  }
+
+  document.querySelectorAll('#engTabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeEngTab = btn.dataset.engtab;
+      engSearchTerm = '';
+      document.getElementById('engSearch').value = '';
+      renderEngagement();
+    });
+  });
+}
+
+// ─── Event wiring ─────────────────────────────────────────────────────────────
+document.getElementById('pickExportBtn').addEventListener('click', pickExport);
+
+document.getElementById('compactExpand').addEventListener('click', () => {
+  document.getElementById('setupGrid').classList.remove('collapsed');
+  document.getElementById('analyzeBar').classList.remove('collapsed');
+  document.getElementById('setupCompact').classList.remove('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+document.getElementById('rerunBtn').addEventListener('click', () => {
+  document.getElementById('setupGrid').classList.remove('collapsed');
+  document.getElementById('analyzeBar').classList.remove('collapsed');
+  document.getElementById('setupCompact').classList.remove('visible');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('pickWorkspaceBtn').addEventListener('click', pickWorkspace);
+document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
+
+document.addEventListener('mouseup', () => { isDragging = false; dragMode = null; });
+
+document.getElementById('search').addEventListener('input', e => {
+  searchTerm = e.target.value;
+  selectedUsers.clear();
+  renderConnections();
+});
+
+document.getElementById('engSearch').addEventListener('input', e => {
+  engSearchTerm = e.target.value;
+  renderEngagement();
+});
+
+document.querySelectorAll('.section-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeSection = btn.dataset.section;
+    document.querySelectorAll('.section-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('connectionsSection').classList.toggle('hidden', activeSection !== 'connections');
+    document.getElementById('engagementSection').classList.toggle('hidden', activeSection !== 'engagement');
+    render();
+  });
+});
+
+document.getElementById('markSelectedBtn').addEventListener('click', async () => {
+  const toMark = [...selectedUsers].filter(u => currentFilteredUsers.includes(u));
+  if (!toMark.length) return;
+  if (!confirm(`Mark ${toMark.length} selected accounts as influencers?`)) return;
+  toMark.forEach(u => influencers.add(u));
+  selectedUsers.clear();
+  renderConnections();
+  await syncTags();
+});
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const snap = exportData.snapshot;
+  if (!snap) return;
+  const ok = await writeBaseline(snap);
+  if (ok) {
+    await archiveExport(snap);
+    prevSnapshot = snap;
+    document.getElementById('saveBtn').textContent = 'Saved and archived ✓';
+    setTimeout(() => { document.getElementById('saveBtn').textContent = 'Save snapshot as new baseline and archive export data'; }, 2500);
+    render();
+  }
+});
+
+document.getElementById('resetLink').addEventListener('click', async () => {
+  if (!confirm('Clear saved baseline and influencer/deactivated lists?')) return;
+  prevSnapshot = null;
+  influencers  = new Set();
+  deactivated  = new Set();
+  if (workspaceHandle) {
+    try {
+      const fh = await workspaceHandle.getFileHandle('baseline.json', { create: true });
+      const wr = await fh.createWritable();
+      await wr.write(JSON.stringify({ snapshot: null, influencers: [], deactivated: [] }, null, 2));
+      await wr.close();
+    } catch (e) {}
+  }
+  if (analysis) render();
+});
+
+if (!('showDirectoryPicker' in window)) {
+  document.getElementById('exportStatus').textContent = 'Folder access not supported — use Chrome or Edge';
+  document.getElementById('exportStatus').className = 'folder-status err';
+  document.getElementById('workspaceStatus').textContent = 'Folder access not supported — use Chrome or Edge';
+  document.getElementById('workspaceStatus').className = 'folder-status err';
+}
+</script>
+</body>
+</html>
