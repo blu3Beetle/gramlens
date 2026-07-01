@@ -168,6 +168,10 @@
   🔒 <strong>Everything stays on your device.</strong> No data is uploaded to any server, no analytics are tracked, and nothing leaves your machine. All processing happens locally in your browser.
 </div>
 
+<div style="background:#fdf0f0;border:0.5px solid #e8a8a8;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#A32D2D;margin-bottom:1.25rem;">
+  📋 <strong>First time?</strong> <a id="exportGuideLink" href="#" style="color:#A32D2D;font-weight:600;">Learn how to export your Instagram data →</a>
+</div>
+
 <div class="setup-area" id="setupArea">
   <div class="setup-grid" id="setupGrid">
     <div class="folder-card">
@@ -896,10 +900,12 @@ function renderEngagement() {
       renderEngagement();
     });
   });
+  
+  document.getElementById('exportGuideLink').href = docsBase + '#export-data';
 }
 
 // ─── Event wiring ─────────────────────────────────────────────────────────────
-const docsBase = window.location.origin + window.location.pathname.replace(/index\.html$/, '') + 'docs.html';
+const docsBase = window.location.href.split('/').slice(0, -1).join('/') + '/docs.html';
 document.getElementById('exportInfoLink').href = docsBase + '#setting-up-your-folders';
 document.getElementById('workspaceInfoLink').href = docsBase + '#setting-up-your-folders';
 

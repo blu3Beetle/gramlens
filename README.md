@@ -46,7 +46,7 @@ The only network activity is the initial page load from GitHub Pages (serving th
 
 ## How to use GramLens
 
-1. Open **[GramLens](https://yourusername.github.io/gramlens)** in Chrome or Edge
+1. Open **[GramLens](https://blu3beetle.github.io/gramlens)** in Chrome or Edge
 2. Export your Instagram data (see below)
 3. Click **Select export folder** and point it to your extracted export folder
 4. Click **Select workspace folder** and point it to your GramLens workspace folder

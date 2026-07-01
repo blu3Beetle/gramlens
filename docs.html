@@ -345,5 +345,18 @@
   </ul>
 </div>
 
+<script>
+  window.addEventListener('load', () => {
+    const hash = window.location.hash;
+    if (hash) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      setTimeout(() => {
+        const el = document.querySelector(hash);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+    }
+  });
+</script>
+
 </body>
 </html>
