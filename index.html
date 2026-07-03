@@ -636,7 +636,8 @@ async function runAnalysis() {
 
   const awaitingApprovalSet = new Set(exportData.awaitingApproval || []);
   analysis = {
-    unfollowers:  unfollowers.filter(u => !influencers.has(u) && !deactivated.has(u) && !awaitingApprovalSet.has(u)),
+    unfollowersAll: unfollowers,
+    awaitingApprovalSet,
     dontFollow, newFriends, lostFriends, friends,
     closeFriends:   exportData.closeFriends  || [],
     restricted:     exportData.restricted    || [],
@@ -696,7 +697,8 @@ function renderBanner() {
 }
 
 function renderMetrics() {
-  const { following, followers, friends, unfollowers, newFriends, lostFriends } = analysis;
+  const { following, followers, friends, newFriends, lostFriends } = analysis;
+  const unfollowers = getConnLists().unfollowers;
   document.getElementById('metrics').innerHTML = `
     <div class="metrics-row metrics-row-static">
       <div class="metric-card">
@@ -750,7 +752,7 @@ function renderMetrics() {
 
 function getConnLists() {
   return {
-    unfollowers:     analysis.unfollowers,
+    unfollowers:     analysis.unfollowersAll.filter(u => !influencers.has(u) && !deactivated.has(u) && !analysis.awaitingApprovalSet.has(u)),
     dontFollow:      analysis.dontFollow,
     newFriends:      analysis.newFriends,
     lostFriends:     analysis.lostFriends,
@@ -837,7 +839,7 @@ function renderConnections() {
     btn.addEventListener('click', async () => {
       const u = btn.dataset.user;
       if (influencers.has(u)) influencers.delete(u); else influencers.add(u);
-      renderConnections();
+      render();
       await syncTags();
     });
   });
@@ -845,7 +847,7 @@ function renderConnections() {
     btn.addEventListener('click', async () => {
       const u = btn.dataset.user;
       if (deactivated.has(u)) deactivated.delete(u); else deactivated.add(u);
-      renderConnections();
+      render();
       await syncTags();
     });
   });
@@ -968,7 +970,7 @@ document.getElementById('markSelectedBtn').addEventListener('click', async () =>
   if (!confirm(`Mark ${toMark.length} selected accounts as influencers?`)) return;
   toMark.forEach(u => influencers.add(u));
   selectedUsers.clear();
-  renderConnections();
+  render();
   await syncTags();
 });
 
