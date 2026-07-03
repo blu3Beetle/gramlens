@@ -191,16 +191,33 @@
 
   <h3>Step by step</h3>
   <ol class="steps">
-    <li>Open Instagram and go to <strong>Settings</strong></li>
-    <li>Tap <strong>Accounts Centre</strong></li>
+    <li>Open Instagram, go to your profile, and tap the ☰ menu to open <strong>Settings and activity</strong></li>
+    <li>Tap <strong>Account Center</strong> (top item)</li>
     <li>Tap <strong>Your information and permissions</strong></li>
-    <li>Tap <strong>Download your information</strong></li>
-    <li>Tap <strong>Download or transfer information</strong></li>
-    <li>Select your <strong>Instagram account</strong></li>
-    <li>Select <strong>Some of your information</strong></li>
+    <li>Tap <strong>Export your information</strong></li>
+    <li>Tap <strong>Create export</strong></li>
+    <li>Select the <strong>Instagram account</strong> you want insights for</li>
+    <li>Tap <strong>Export to device</strong></li>
     <li>
       <div class="step-content">
-        Select only the following categories — leave everything else unchecked:
+        On the <strong>Confirm your export</strong> screen, set:
+        <div class="table-wrap" style="margin-top:8px;">
+          <table>
+            <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Notify</td><td>Your email</td></tr>
+              <tr><td>Date range</td><td>All time</td></tr>
+              <tr><td>Format</td><td><strong>JSON</strong> — must be JSON, not HTML</td></tr>
+              <tr><td>Media quality</td><td>Low (GramLens doesn't use media files)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warn-box">⚠️ <strong>Format must be JSON.</strong> If you select HTML, GramLens won't be able to read the files.</div>
+      </div>
+    </li>
+    <li>
+      <div class="step-content">
+        Tap <strong>Customise information</strong> (default is "All available information") and select only the following — leave everything else unchecked:
         <p>Under <strong>Your Instagram activity:</strong></p>
         <ul class="checklist">
           <li>Comments</li>
@@ -215,24 +232,7 @@
         <p style="color:var(--text2);font-size:13px;">This keeps the export small and fast — GramLens doesn't use any of the other data.</p>
       </div>
     </li>
-    <li>
-      <div class="step-content">
-        Set the export settings:
-        <div class="table-wrap" style="margin-top:8px;">
-          <table>
-            <thead><tr><th>Setting</th><th>Value</th></tr></thead>
-            <tbody>
-              <tr><td>Date range</td><td>All time</td></tr>
-              <tr><td>Format</td><td><strong>JSON</strong> — must be JSON, not HTML</td></tr>
-              <tr><td>Media quality</td><td>Low (GramLens doesn't use media files)</td></tr>
-              <tr><td>Notify</td><td>Your email</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="warn-box">⚠️ <strong>Format must be JSON.</strong> If you select HTML, GramLens won't be able to read the files.</div>
-      </div>
-    </li>
-    <li>Tap <strong>Create export → Export to device</strong></li>
+    <li>Tap <strong>Start export</strong> — you'll be asked to re-enter your Instagram password to confirm</li>
     <li>You'll get two emails from Meta Privacy Team — first confirming the request, second when export is ready to download</li>
     <li>Download the ZIP from the second email and <strong>extract it</strong> to a folder on your computer — this becomes your export folder</li>
   </ol>
