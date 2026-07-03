@@ -6,3 +6,6 @@ Thumbs.db
 *.zip
 baseline.json
 archive/
+
+# Graphify build output
+graphify-out/

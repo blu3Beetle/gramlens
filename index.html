@@ -21,6 +21,13 @@
     max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem;
   }
   h1 { font-size: 32px; font-weight: 700; margin-bottom: 0.25rem; letter-spacing: -0.5px; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .instructions-btn {
+    font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: var(--radius);
+    background: #fdf0f0; border: 0.5px solid #e8a8a8; color: #A32D2D;
+    text-decoration: none; white-space: nowrap; transition: background 0.15s;
+  }
+  .instructions-btn:hover { background: #fbe0e0; }
   .subtitle { font-size: 13px; color: var(--text2); margin-bottom: 1rem; }
   button {
     font-size: 13px; padding: 8px 14px; cursor: pointer;
@@ -162,7 +169,10 @@
 </head>
 <body>
 
-<h1>GramLens</h1>
+<div class="page-header">
+  <h1>GramLens</h1>
+  <a class="instructions-btn" id="instructionsLink" href="docs.html" target="_blank">Instructions?</a>
+</div>
 <p class="subtitle">Instagram analyser — connections, engagement, and follower insights from your data export.</p>
 <div style="background:#f0faf5;border:0.5px solid #a8dcc4;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:#0F6E56;margin-bottom:1.25rem;">
   🔒 <strong>Everything stays on your device.</strong> No data is uploaded to any server, no analytics are tracked, and nothing leaves your machine. All processing happens locally in your browser.
@@ -908,6 +918,7 @@ const docsBase = window.location.href.split('/').slice(0, -1).join('/') + '/docs
 document.getElementById('exportInfoLink').href = docsBase + '#setting-up-your-folders';
 document.getElementById('workspaceInfoLink').href = docsBase + '#setting-up-your-folders';
 document.getElementById('exportGuideLink').href = docsBase + '#export-data';
+document.getElementById('instructionsLink').href = docsBase;
 
 document.getElementById('pickExportBtn').addEventListener('click', pickExport);
 

@@ -18,12 +18,16 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background: var(--bg); color: var(--text1);
-    max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+    max-width: 860px; margin: 0 auto; padding: calc(64px + 2rem) 1.5rem 4rem;
     line-height: 1.65;
   }
   .site-header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 64px; width: 100%; max-width: 860px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 2.5rem; padding-bottom: 1rem;
+    padding: 0 1.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border-bottom: 0.5px solid var(--border);
   }
   .site-header a.logo { font-size: 28px; font-weight: 700; text-decoration: none; color: var(--text1); letter-spacing: -0.5px; }
@@ -66,11 +70,11 @@
   ul, ol { font-size: 14px; padding-left: 1.5rem; margin: 0 0 1rem; }
   li { margin-bottom: 6px; }
   .steps { counter-reset: step; list-style: none; padding: 0; }
-  .steps li {
+  .steps > li {
     counter-increment: step; margin-bottom: 10px;
     display: flex; align-items: flex-start; gap: 12px; font-size: 14px;
   }
-  .steps li::before {
+  .steps > li::before {
     content: counter(step); flex-shrink: 0;
     width: 24px; height: 24px; border-radius: 50%;
     background: var(--accent-text); color: white;
@@ -78,6 +82,9 @@
     display: flex; align-items: center; justify-content: center;
     margin-top: 1px;
   }
+  .steps > li .step-content { flex: 1 1 auto; min-width: 0; }
+  .steps > li .step-content > *:first-child { margin-top: 0; }
+  .steps > li .step-content p { margin: 0.75rem 0 0.5rem; }
   .checklist { list-style: none; padding: 0; }
   .checklist li { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
   .checklist li::before { content: '✅'; }
@@ -191,40 +198,44 @@
     <li>Tap <strong>Download or transfer information</strong></li>
     <li>Select your <strong>Instagram account</strong></li>
     <li>Select <strong>Some of your information</strong></li>
-    <li>Select only the categories listed below — leave everything else unchecked</li>
-    <li>Set export settings as shown in the table below</li>
+    <li>
+      <div class="step-content">
+        Select only the following categories — leave everything else unchecked:
+        <p>Under <strong>Your Instagram activity:</strong></p>
+        <ul class="checklist">
+          <li>Comments</li>
+          <li>Likes</li>
+          <li>Saved</li>
+          <li>Story interactions</li>
+        </ul>
+        <p>Under <strong>Connections:</strong></p>
+        <ul class="checklist">
+          <li>Followers and following</li>
+        </ul>
+        <p style="color:var(--text2);font-size:13px;">This keeps the export small and fast — GramLens doesn't use any of the other data.</p>
+      </div>
+    </li>
+    <li>
+      <div class="step-content">
+        Set the export settings:
+        <div class="table-wrap" style="margin-top:8px;">
+          <table>
+            <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Date range</td><td>All time</td></tr>
+              <tr><td>Format</td><td><strong>JSON</strong> — must be JSON, not HTML</td></tr>
+              <tr><td>Media quality</td><td>Low (GramLens doesn't use media files)</td></tr>
+              <tr><td>Notify</td><td>Your email</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="warn-box">⚠️ <strong>Format must be JSON.</strong> If you select HTML, GramLens won't be able to read the files.</div>
+      </div>
+    </li>
     <li>Tap <strong>Create export → Export to device</strong></li>
     <li>You'll get two emails from Meta Privacy Team — first confirming the request, second when export is ready to download</li>
     <li>Download the ZIP from the second email and <strong>extract it</strong> to a folder on your computer — this becomes your export folder</li>
   </ol>
-
-  <h3>What to select</h3>
-  <p>Under <strong>Your Instagram activity:</strong></p>
-  <ul class="checklist">
-    <li>Comments</li>
-    <li>Likes</li>
-    <li>Saved</li>
-    <li>Story interactions</li>
-  </ul>
-  <p>Under <strong>Connections:</strong></p>
-  <ul class="checklist">
-    <li>Followers and following</li>
-  </ul>
-  <p style="color:var(--text2);font-size:13px;">Leave everything else unchecked. This keeps the export small and fast — GramLens doesn't use any of the other data.</p>
-
-  <h3>Export settings</h3>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Setting</th><th>Value</th></tr></thead>
-      <tbody>
-        <tr><td>Date range</td><td>All time</td></tr>
-        <tr><td>Format</td><td><strong>JSON</strong> — must be JSON, not HTML</td></tr>
-        <tr><td>Media quality</td><td>Low (GramLens doesn't use media files)</td></tr>
-        <tr><td>Notify</td><td>Your email</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <div class="warn-box">⚠️ <strong>Format must be JSON.</strong> If you select HTML, GramLens won't be able to read the files.</div>
 </div>
 
 <hr>
